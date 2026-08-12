@@ -1,6 +1,1 @@
-{
-  "buildCommand": "exit 0",
-  "functions": {
-    "api/**/*.js": {}
-  }
-}
+{ "buildCommand": "exit 0" }
