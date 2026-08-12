@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restora | Best sellers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <div id="owner-modal" class="admin-modal hidden">
+    <div class="admin-modal-card">
+      <p class="eyebrow">Owner login</p>
+      <h3>Restaurant admin</h3>
+      <label class="admin-password-row">
+        <span>Password</span>
+        <input id="owner-password" type="password" placeholder="Enter admin password" />
+      </label>
+      <div class="form-actions">
+        <button class="primary-button" id="owner-submit" type="button">Open dashboard</button>
+        <button class="secondary-button" id="owner-cancel" type="button">Cancel</button>
+      </div>
+      <p id="owner-error" class="admin-error hidden">Incorrect password.</p>
+    </div>
+  </div>
+
+  <main class="shell">
+    <header class="topbar card">
+      <div>
+        <p class="eyebrow">Popular picks</p>
+        <h1>Restora</h1>
+        <p class="subtitle">Top-rated items our customers order most often.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="primary-button nav-link" href="/customer.html" type="button">Order now</a>
+        <button class="ghost-button owner-access-button" type="button">Owner access</button>
+      </div>
+    </header>
+
+    <section class="hero card">
+      <div class="hero-copy">
+        <p class="hero-tag">Best sellers</p>
+        <h2>Most loved dishes this week.</h2>
+        <p>See which food items are trending, how many times they’ve been sold, and what customers are rating them.</p>
+      </div>
+      <div class="hero-panel customer-panel">
+        <div class="stat">
+          <span id="top-sold-count">0</span>
+          <small>Best sold</small>
+        </div>
+        <div class="stat accent">
+          <span id="average-rating">5.0</span>
+          <small>Avg. rating</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="card feed-card storefront-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Sales overview</p>
+          <h3>Customer favourites</h3>
+        </div>
+      </div>
+
+      <div id="best-sellers-status" class="status-message">Loading best sellers...</div>
+      <div id="best-sellers-list" class="best-sellers-list"></div>
+    </section>
+  </main>
+
+  <template id="best-seller-template">
+    <article class="best-seller-card">
+      <div class="best-seller-top">
+        <div>
+          <p class="best-seller-badge">Best seller</p>
+          <h4 class="best-seller-name"></h4>
+        </div>
+        <span class="best-seller-price"></span>
+      </div>
+      <div class="best-seller-meta">
+        <span class="meta-pill sold-pill"></span>
+        <span class="meta-pill review-pill"></span>
+      </div>
+      <p class="best-seller-review"></p>
+    </article>
+  </template>
+
+  <script src="/index.js"></script>
+</body>
+</html>

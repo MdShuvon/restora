@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restora | Customer order</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <main class="shell">
+    <header class="topbar card">
+      <div>
+        <p class="eyebrow">Customer ordering</p>
+        <h1>Order your meal</h1>
+        <p class="subtitle">Choose your table, add food, and get a printable receipt instantly.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="ghost-button nav-link" href="/index.html" type="button">Back to home</a>
+      </div>
+    </header>
+
+    <section class="hero card">
+      <div class="hero-copy">
+        <p class="hero-tag">Simple steps</p>
+        <h2>Place your order in seconds.</h2>
+        <p>Pick your table, choose from the restaurant menu, and submit your order. You will immediately get a receipt in PDF format.</p>
+      </div>
+      <div class="hero-panel customer-panel">
+        <div class="stat">
+          <span id="menu-count">0</span>
+          <small>Items</small>
+        </div>
+        <div class="stat accent">
+          <span id="customer-total">$0.00</span>
+          <small>Current total</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-layout customer-grid">
+      <section class="card composer-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Place order</p>
+            <h3>Customer form</h3>
+          </div>
+        </div>
+
+        <form id="customer-order-form" class="order-form">
+          <label>
+            <span>Customer name</span>
+            <input id="customer-name" type="text" placeholder="Ariana Khan" required maxlength="80" />
+          </label>
+
+          <label>
+            <span>Table number</span>
+            <input id="table-number" type="text" placeholder="Table 12" required maxlength="40" />
+          </label>
+
+          <label>
+            <span>Item</span>
+            <div class="select-wrap">
+              <select id="menu-select" required></select>
+            </div>
+          </label>
+
+          <div class="two-up">
+            <label>
+              <span>Quantity</span>
+              <input id="quantity" type="number" min="1" step="1" value="1" required />
+            </label>
+
+            <label>
+              <span>Order note</span>
+              <input id="notes" type="text" placeholder="No onions" maxlength="160" />
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-button" type="submit">Submit order</button>
+            <button class="secondary-button" type="button" id="customer-reset-button">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card feed-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Menu</p>
+            <h3>Available items</h3>
+          </div>
+        </div>
+
+        <div id="customer-status" class="status-message">Loading menu...</div>
+        <div id="customer-menu-list" class="menu-list customer-menu-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <template id="customer-menu-template">
+    <div class="menu-item-row customer-menu-item">
+      <div>
+        <strong class="menu-item-name"></strong>
+        <span class="menu-item-price"></span>
+      </div>
+      <button class="print-button select-item-button" type="button">Select</button>
+    </div>
+  </template>
+
+  <script src="/customer.js"></script>
+</body>
+</html>
