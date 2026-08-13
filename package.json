@@ -2,14 +2,14 @@
   "name": "restora",
   "version": "1.0.0",
   "description": "🍽️ Modern restaurant management system with storefront, ordering, and admin dashboard",
-  "main": "local-dev-server.js",
+  "main": "scripts/local-dev-server.js",
   "type": "commonjs",
   "engines": {
     "node": ">=14.0.0"
   },
   "scripts": {
-    "start": "node local-dev-server.js",
-    "dev": "node local-dev-server.js",
+    "start": "node scripts/local-dev-server.js",
+    "dev": "node scripts/local-dev-server.js",
     "check": "node --check server.js && node --check customer.js && node --check index.js && node --check restaurant.js && node --check api/orders.js && node --check api/menu.js",
     "deploy": "npx vercel --prod"
   },
