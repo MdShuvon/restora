@@ -166,7 +166,7 @@ h1 {
 
 .hero-panel {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
   gap: 14px;
 }
 
@@ -182,8 +182,14 @@ h1 {
 }
 
 .stat span {
-  font-size: clamp(1.4rem, 2.5vw, 2.3rem);
+  font-size: clamp(1.1rem, 2.2vw, 2.1rem);
   font-weight: 800;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+.stat {
+  min-width: 140px;
 }
 
 .stat small,
@@ -198,6 +204,11 @@ h1 {
   background: linear-gradient(160deg, rgba(184, 92, 56, 0.16), rgba(255, 255, 255, 0.68));
 }
 
+/* .stat.accent #customer-total {
+  white-space: nowrap;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+} */
+
 .grid-layout {
   margin-top: 24px;
   display: grid;
@@ -208,6 +219,7 @@ h1 {
 .composer-card,
 .feed-card {
   padding: 26px;
+  margin-top: 24px;
 }
 
 .section-heading {

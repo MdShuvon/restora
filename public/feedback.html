@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restora | Rate your food</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .star-rating {
+      display: flex;
+      gap: 6px;
+      font-size: 34px;
+      line-height: 1;
+      margin: 6px 0 4px;
+    }
+    .star-rating button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: #d8cdb8;
+      transition: color 0.15s ease, transform 0.1s ease;
+    }
+    .star-rating button.active {
+      color: #e0a53b;
+    }
+    .star-rating button:hover {
+      transform: scale(1.12);
+    }
+    .rating-label {
+      font-size: 13px;
+      color: #6b5f52;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <main class="shell">
+    <header class="topbar card">
+      <div>
+        <p class="eyebrow">Feedback</p>
+        <h1>Rate your food</h1>
+        <p class="subtitle">Tell us what you thought — it helps other customers and the kitchen.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="ghost-button nav-link" href="index.html" type="button">Back to home</a>
+      </div>
+    </header>
+
+    <section class="card composer-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Leave a review</p>
+          <h3>How was your dish?</h3>
+        </div>
+      </div>
+
+      <form id="feedback-form" class="order-form">
+        <label>
+          <span>Which item?</span>
+          <div class="select-wrap">
+            <select id="feedback-item-select" required></select>
+          </div>
+        </label>
+
+        <label>
+          <span>Your rating</span>
+        </label>
+        <div id="star-rating" class="star-rating">
+          <button type="button" data-value="1">★</button>
+          <button type="button" data-value="2">★</button>
+          <button type="button" data-value="3">★</button>
+          <button type="button" data-value="4">★</button>
+          <button type="button" data-value="5">★</button>
+        </div>
+        <p class="rating-label" id="rating-label">Tap a star to rate.</p>
+
+        <label>
+          <span>Comment (optional)</span>
+          <input id="feedback-comment" type="text" placeholder="Loved the flavor, would order again!" maxlength="200" />
+        </label>
+
+        <label>
+          <span>Your name (optional)</span>
+          <input id="feedback-name" type="text" placeholder="Ariana Khan" maxlength="80" />
+        </label>
+
+        <div class="form-actions">
+          <button class="primary-button" type="submit">Submit review</button>
+        </div>
+      </form>
+
+      <p id="feedback-status" class="status-message"></p>
+    </section>
+  </main>
+
+  <script src="feedback.js"></script>
+</body>
+</html>

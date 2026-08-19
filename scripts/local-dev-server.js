@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const root = __dirname;
+const root = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 3000;
 
 const menu = [
@@ -24,6 +24,7 @@ let orders = [
     notes: 'Extra spicy',
     status: 'ready',
     source: 'customer',
+    group_id: 'single-1',
     created_at: new Date().toISOString(),
     rating: 5
   },
@@ -37,10 +38,17 @@ let orders = [
     notes: 'No onions',
     status: 'pending',
     source: 'customer',
+    group_id: 'single-2',
     created_at: new Date(Date.now() - 900000).toISOString(),
     rating: 4
   }
 ];
+
+// In-memory mock of /api/reviews so feedback.html works locally too.
+// Production uses reviews.js with Upstash Redis instead of this array.
+let reviews = [];
+let nextReviewId = 1;
+let nextOrderId = 3;
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -174,6 +182,7 @@ const server = http.createServer(async (req, res) => {
       const notes = String(body.notes || '').trim();
       const status = String(body.status || 'pending').trim();
       const source = String(body.source || 'customer').trim();
+      const groupId = body.groupId ? String(body.groupId).trim() : '';
 
       if (!customerName || !itemName || !tableNumber || !Number.isInteger(quantity) || quantity <= 0) {
         sendJson(res, 400, { error: 'Customer name, item, table, and quantity are required.' });
@@ -185,8 +194,9 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      const id = nextOrderId++;
       const newOrder = {
-        id: Date.now(),
+        id,
         customer_name: customerName,
         item_name: itemName,
         quantity,
@@ -195,6 +205,7 @@ const server = http.createServer(async (req, res) => {
         notes,
         status,
         source,
+        group_id: groupId || `single-${id}`,
         created_at: new Date().toISOString(),
         rating: 5
       };
@@ -221,14 +232,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (pathname.startsWith('/api/orders') && req.method === 'PATCH') {
+    if (pathname.startsWith('/api/orders') && req.method === 'PATCH') {
     try {
       const orderId = Number(url.searchParams.get('id'));
       const body = await parseBody(req);
-      const nextStatus = String(body.status || '').trim();
+      const nextStatus = body.status ? String(body.status).trim() : '';
+      const paymentStatus = body.paymentStatus ? String(body.paymentStatus).trim() : '';
+      const paymentMethod = body.paymentMethod ? String(body.paymentMethod).trim() : '';
+      const paidBy = body.paidBy ? String(body.paidBy).trim() : '';
 
-      if (!Number.isInteger(orderId) || orderId <= 0 || !nextStatus) {
-        sendJson(res, 400, { error: 'Valid order id and status required.' });
+      if (!Number.isInteger(orderId) || orderId <= 0 || (!nextStatus && !paymentStatus)) {
+        sendJson(res, 400, { error: 'Valid order id and status or paymentStatus required.' });
         return;
       }
 
@@ -238,10 +252,61 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      order.status = nextStatus;
+      if (nextStatus) {
+        order.status = nextStatus;
+      }
+
+      if (paymentStatus) {
+        order.payment_status = paymentStatus;
+        if (paymentStatus === 'paid') {
+          order.payment_method = paymentMethod || order.payment_method || 'cash';
+          order.paid_by = paidBy || order.paid_by || 'Staff';
+          order.paid_at = new Date().toISOString();
+        } else {
+          order.payment_method = null;
+          order.paid_by = null;
+          order.paid_at = null;
+        }
+      }
+
       sendJson(res, 200, order);
     } catch (error) {
       sendJson(res, 400, { error: error.message || 'Invalid patch payload.' });
+    }
+    return;
+  }
+
+  if (pathname === '/api/reviews' && req.method === 'GET') {
+    sendJson(res, 200, reviews);
+    return;
+  }
+
+  if (pathname === '/api/reviews' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const itemName = String(body.itemName || '').trim();
+      const rating = Number(body.rating);
+      const comment = String(body.comment || '').trim();
+      const customerName = String(body.customerName || '').trim();
+
+      if (!itemName || !rating || rating < 1 || rating > 5) {
+        sendJson(res, 400, { error: 'Item and a rating between 1-5 are required' });
+        return;
+      }
+
+      const newReview = {
+        id: nextReviewId++,
+        item_name: itemName,
+        rating,
+        comment,
+        customer_name: customerName || 'Anonymous',
+        created_at: new Date().toISOString()
+      };
+
+      reviews.push(newReview);
+      sendJson(res, 201, newReview);
+    } catch (error) {
+      sendJson(res, 400, { error: error.message || 'Invalid review payload.' });
     }
     return;
   }
@@ -257,11 +322,6 @@ const server = http.createServer(async (req, res) => {
 
   if (fs.existsSync(safePath) && fs.statSync(safePath).isFile()) {
     serveStaticFile(res, safePath);
-    return;
-  }
-
-  if (pathname === '/restaurant.html' || pathname === '/customer.html' || pathname === '/index.html') {
-    serveStaticFile(res, path.join(root, pathname));
     return;
   }
 

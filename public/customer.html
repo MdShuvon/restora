@@ -7,7 +7,168 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    .cart-item-unit {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .receipt-box {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(31, 26, 23, 0.1);
+      border-radius: 22px;
+      padding: 24px;
+    }
+
+    .receipt-brand {
+      text-align: center;
+      margin-bottom: 2px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.6rem;
+      color: var(--accent);
+    }
+
+    .receipt-tagline {
+      text-align: center;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .receipt-meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      color: var(--muted);
+      padding: 3px 0;
+    }
+
+    .receipt-meta-row strong {
+      color: var(--text);
+      overflow-wrap: break-word;
+      text-align: right;
+      margin-left: 12px;
+    }
+
+    .receipt-divider {
+      border: none;
+      border-top: 1px dashed rgba(31, 26, 23, 0.18);
+      margin: 14px 0;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .receipt-table th {
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(31, 26, 23, 0.12);
+    }
+
+    .receipt-table th.num, .receipt-table td.num {
+      text-align: right;
+    }
+
+    .receipt-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(31, 26, 23, 0.06);
+      vertical-align: top;
+    }
+
+    .receipt-item-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .receipt-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 2px solid var(--text);
+    }
+
+    .receipt-total-label {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .receipt-total-amount {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent);
+      overflow-wrap: break-word;
+      word-break: break-all;
+      text-align: right;
+    }
+
+    .receipt-draft-badge,
+    .receipt-submitted-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .receipt-draft-badge {
+      background: rgba(184, 92, 56, 0.12);
+      color: var(--accent);
+    }
+
+    .receipt-submitted-badge {
+      background: rgba(29, 127, 115, 0.12);
+      color: var(--accent-2);
+    }
+
+    @media print {
+      .orb, .topbar, .hero, .composer-card, #feed-card .section-heading, #receipt-empty-message, .card-actions {
+        display: none !important;
+      }
+      html, body {
+        background: #fff !important;
+      }
+      .shell {
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      #feed-card {
+        box-shadow: none;
+        border: none;
+        background: none;
+        padding: 0;
+        backdrop-filter: none;
+        margin: 0;
+      }
+      .grid-layout {
+        display: block;
+        margin: 0;
+      }
+      #receipt-print-area {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="orb orb-a"></div>
@@ -22,7 +183,7 @@
         <p class="subtitle">Choose your table, add food, and get a printable receipt instantly.</p>
       </div>
       <div class="topbar-actions">
-        <a class="ghost-button nav-link" href="/index.html" type="button">Back to home</a>
+        <a class="ghost-button nav-link" href="index.html" type="button">Back to home</a>
       </div>
     </header>
 
@@ -30,28 +191,30 @@
       <div class="hero-copy">
         <p class="hero-tag">Simple steps</p>
         <h2>Place your order in seconds.</h2>
-        <p>Pick your table, choose from the restaurant menu, and submit your order. You will immediately get a receipt in PDF format.</p>
+        <p>Pick your table, add one or more items from the menu, then submit. You will immediately get a printable receipt with everything you ordered.</p>
       </div>
       <div class="hero-panel customer-panel">
         <div class="stat">
           <span id="menu-count">0</span>
-          <small>Items</small>
+          <small>Menu items</small>
         </div>
         <div class="stat accent">
           <span id="customer-total">$0.00</span>
-          <small>Current total</small>
+          <small>Cart total</small>
         </div>
       </div>
     </section>
 
     <section class="grid-layout customer-grid">
-      <section class="card composer-card">
+      <section class="card composer-card" id="composer-card">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Place order</p>
             <h3>Customer form</h3>
           </div>
         </div>
+
+        <div id="customer-status" class="status-message">Loading menu...</div>
 
         <form id="customer-order-form" class="order-form">
           <label>
@@ -64,24 +227,45 @@
             <input id="table-number" type="text" placeholder="Table 12" required maxlength="40" />
           </label>
 
+          <div class="section-heading" style="margin-top: 8px;">
+            <div>
+              <p class="eyebrow">Add items</p>
+              <h3>Build your order</h3>
+            </div>
+          </div>
+
           <label>
             <span>Item</span>
             <div class="select-wrap">
-              <select id="menu-select" required></select>
+              <select id="menu-select"></select>
             </div>
           </label>
 
           <div class="two-up">
             <label>
               <span>Quantity</span>
-              <input id="quantity" type="number" min="1" step="1" value="1" required />
+              <input id="quantity" type="number" min="1" step="1" value="1"/>
             </label>
 
             <label>
-              <span>Order note</span>
+              <span>Item note</span>
               <input id="notes" type="text" placeholder="No onions" maxlength="160" />
             </label>
           </div>
+
+          <div class="form-actions">
+            <button class="secondary-button" type="button" id="add-to-cart-button">+ Add item to order</button>
+          </div>
+
+          <div class="section-heading" style="margin-top: 8px;">
+            <div>
+              <p class="eyebrow">Your order</p>
+              <h3>Cart</h3>
+            </div>
+          </div>
+
+          <p id="cart-empty-message" class="status-message">No items added yet.</p>
+          <div id="cart-list" class="orders-list cart-list"></div>
 
           <div class="form-actions">
             <button class="primary-button" type="submit">Submit order</button>
@@ -90,30 +274,73 @@
         </form>
       </section>
 
-      <section class="card feed-card">
+      <section class="card feed-card" id="feed-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Menu</p>
-            <h3>Available items</h3>
+            <p class="eyebrow">Live preview</p>
+            <h3>Your receipt</h3>
           </div>
         </div>
 
-        <div id="customer-status" class="status-message">Loading menu...</div>
-        <div id="customer-menu-list" class="menu-list customer-menu-list"></div>
+        <p id="receipt-empty-message" class="status-message">Add items on the left to see your order preview here.</p>
+
+        <div id="receipt-print-area" class="hidden">
+          <div class="receipt-box">
+            <span id="receipt-status-badge" class="receipt-draft-badge">Draft — not submitted yet</span>
+            <p class="receipt-brand">Restora</p>
+            <p class="receipt-tagline">Order Receipt</p>
+
+            <div class="receipt-meta-row"><span>Receipt No.</span><strong id="receipt-no">—</strong></div>
+            <div class="receipt-meta-row"><span>Date</span><strong id="receipt-date">—</strong></div>
+            <hr class="receipt-divider" />
+            <div class="receipt-meta-row"><span>Customer</span><strong id="receipt-customer">—</strong></div>
+            <div class="receipt-meta-row"><span>Table</span><strong id="receipt-table">—</strong></div>
+
+            <table class="receipt-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="num">Qty</th>
+                  <th class="num">Price</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody id="receipt-items-body"></tbody>
+            </table>
+
+            <div class="receipt-total-row">
+              <span class="receipt-total-label">Grand total</span>
+              <span class="receipt-total-amount" id="receipt-grand-total">$0.00</span>
+            </div>
+            <p id="receipt-payment-note" class="receipt-item-note" style="text-align:center; margin-top:10px;"></p>
+          </div>
+        </div>
+
+        <div class="card-actions" id="receipt-actions" style="margin-top: 16px;">
+          <button class="print-button" type="button" id="receipt-print-button" disabled>🖨️ Print</button>
+          <button class="primary-button" type="button" id="receipt-download-button" disabled>⬇️ Download receipt</button>
+        </div>
       </section>
     </section>
   </main>
 
-  <template id="customer-menu-template">
-    <div class="menu-item-row customer-menu-item">
-      <div>
-        <strong class="menu-item-name"></strong>
-        <span class="menu-item-price"></span>
+  <template id="cart-item-template">
+    <div class="order-card cart-item">
+      <div class="order-card-top">
+        <div>
+          <p class="order-name cart-item-name"></p>
+          <span class="order-item cart-item-qty"></span>
+          <span class="cart-item-unit"></span>
+        </div>
+        <strong class="order-total cart-item-line-total"></strong>
       </div>
-      <button class="print-button select-item-button" type="button">Select</button>
+      <p class="order-notes cart-item-notes"></p>
+      <div class="card-actions">
+        <button class="delete-button cart-remove-button" type="button">Remove</button>
+      </div>
     </div>
   </template>
 
-  <script src="/customer.js"></script>
+  <script src="customer.js"></script>
 </body>
 </html>

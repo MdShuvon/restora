@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="orb orb-a"></div>
@@ -38,7 +38,7 @@
         <p class="subtitle">Track live orders, manage menu prices, and call tables when food is ready.</p>
       </div>
       <div class="topbar-actions">
-        <a class="ghost-button nav-link" href="/index.html" type="button">Public home</a>
+        <a class="ghost-button nav-link" href="index.html" type="button">Public home</a>
         <button class="ghost-button" id="refresh-button" type="button">Refresh data</button>
       </div>
     </header>
@@ -123,19 +123,22 @@
       <div class="order-meta">
         <span class="meta-pill order-customer"></span>
         <span class="meta-pill order-status"></span>
+        <span class="meta-pill order-payment"></span>
         <span class="meta-pill order-eta"></span>
       </div>
 
       <p class="order-item"></p>
       <p class="order-notes"></p>
+      <p class="order-payment-detail"></p>
 
       <div class="card-actions">
         <button class="print-button call-button" type="button">Call table</button>
         <button class="primary-button ready-button" type="button">Mark ready</button>
+        <button class="secondary-button paid-button" type="button">Mark as Paid</button>
       </div>
     </article>
   </template>
 
-  <script src="/restaurant.js"></script>
+  <script src="restaurant.js"></script>
 </body>
 </html>

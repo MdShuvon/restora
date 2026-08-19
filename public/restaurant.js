@@ -49,7 +49,7 @@ loginSubmit.addEventListener("click", () => {
 });
 
 loginCancel.addEventListener("click", () => {
-  window.location.href = "/index.html";
+  window.location.href = "index.html";
 });
 
 loginInput.addEventListener("keydown", (event) => {
@@ -93,10 +93,27 @@ function formatDate(value) {
 }
 
 function renderDashboardMetrics() {
-  const pending = state.orders.filter((order) => String(order.status || "pending") !== "ready").length;
-  const ready = state.orders.filter((order) => String(order.status || "pending") === "ready").length;
+  const groups = groupOrders(state.orders);
+  const pending = groups.filter((g) => g.status !== "ready").length;
+  const ready = groups.filter((g) => g.status === "ready").length;
   pendingCount.textContent = String(pending);
   readyCount.textContent = String(ready);
+}
+
+async function loadMenu() {
+  try {
+    const response = await fetch("/api/menu");
+    if (!response.ok) {
+      throw new Error("Unable to load menu.");
+    }
+
+    const menu = await response.json();
+    state.menu = Array.isArray(menu) ? menu : [];
+    renderMenu();
+  } catch (error) {
+    console.error(error);
+    menuStatus.textContent = "Could not load menu.";
+  }
 }
 
 function renderMenu() {
@@ -121,8 +138,50 @@ function renderMenu() {
   menuStatus.textContent = `${state.menu.length} menu items loaded.`;
 }
 
+function groupOrders(orders) {
+  const groups = new Map();
+
+  orders.forEach((order) => {
+    const key = order.group_id || `single-${order.id}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        groupId: key,
+        ids: [],
+        customer_name: order.customer_name || "Guest",
+        table_number: order.table_number || "Table",
+        created_at: order.created_at,
+        items: []
+      });
+    }
+    const group = groups.get(key);
+    group.ids.push(order.id);
+    group.items.push(order);
+  });
+
+    return Array.from(groups.values()).map((group) => {
+    const allReady = group.items.every((item) => String(item.status || "pending") === "ready");
+    const allPaid = group.items.every((item) => String(item.payment_status || "unpaid") === "paid");
+    const total = group.items.reduce(
+      (sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0),
+      0
+    );
+    const firstItem = group.items[0] || {};
+    return {
+      ...group,
+      status: allReady ? "ready" : "pending",
+      total,
+      paymentStatus: allPaid ? "paid" : "unpaid",
+      paymentMethod: firstItem.payment_method || null,
+      paidBy: firstItem.paid_by || null,
+      paidAt: firstItem.paid_at || null
+    };
+  });
+}
+
 function renderOrders() {
-  if (!state.orders.length) {
+  const groups = groupOrders(state.orders);
+
+  if (!groups.length) {
     ordersList.innerHTML = '<div class="order-card"><h4>No active orders</h4><p class="order-notes">Customer orders will appear here once submitted.</p></div>';
     statusMessage.textContent = "No orders found.";
     renderDashboardMetrics();
@@ -132,54 +191,56 @@ function renderOrders() {
   ordersList.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
-  state.orders.forEach((order) => {
+  groups.forEach((group) => {
     const card = restaurantOrderTemplate.content.firstElementChild.cloneNode(true);
-    const total = Number(order.quantity || 0) * Number(order.unit_price || 0);
-    const status = String(order.status || "pending");
-    const orderName = order.customer_name || "Guest";
-    const tableValue = order.table_number || "Table";
+    const status = group.status;
 
-    card.querySelector(".order-table").textContent = tableValue;
-    card.querySelector(".order-total").textContent = formatMoney(total);
-    card.querySelector(".order-customer").textContent = orderName;
-    card.querySelector(".order-status").textContent = status === "ready" ? "Ready" : "Pending";
-    card.querySelector(".order-eta").textContent = formatDate(order.created_at);
-    card.querySelector(".order-item").textContent = `${order.item_name || "Item"} x ${order.quantity || 1}`;
-    card.querySelector(".order-notes").textContent = order.notes || "No notes.";
+    const itemsHtml = group.items
+      .map((item) => {
+        const noteText = item.notes ? ` <em>(${item.notes})</em>` : "";
+        return `<div>${item.item_name || "Item"} &times; ${item.quantity || 1}${noteText}</div>`;
+      })
+      .join("");
+
+    card.querySelector(".order-table").textContent = group.table_number;
+    card.querySelector(".order-total").textContent = formatMoney(group.total);
+    card.querySelector(".order-customer").textContent = group.customer_name;
+    card.querySelector(".order-status").textContent = status === "ready" ? "Confirmed" : "Pending";
+    card.querySelector(".order-eta").textContent = formatDate(group.created_at);
+    card.querySelector(".order-item").innerHTML = itemsHtml;
+    card.querySelector(".order-notes").textContent = `${group.items.length} item(s) in this order`;
 
     const callButton = card.querySelector(".call-button");
-    callButton.addEventListener("click", () => callTable(order));
+    callButton.addEventListener("click", () => callTable(group));
 
-    const readyButton = card.querySelector(".ready-button");
-    readyButton.addEventListener("click", () => markOrderReady(order.id));
+        const readyButton = card.querySelector(".ready-button");
+    readyButton.addEventListener("click", () => markGroupReady(group.ids));
     if (status === "ready") {
-      readyButton.textContent = "Ready sent";
+      readyButton.textContent = "Confirmed";
       readyButton.disabled = true;
+    }
+
+    const paymentPill = card.querySelector(".order-payment");
+    paymentPill.textContent = group.paymentStatus === "paid" ? "💰 Paid" : "Unpaid";
+
+    const paymentDetail = card.querySelector(".order-payment-detail");
+    paymentDetail.textContent = group.paymentStatus === "paid"
+      ? `Paid via ${group.paymentMethod || "—"} • confirmed by ${group.paidBy || "—"} • ${formatDate(group.paidAt)}`
+      : "";
+
+    const paidButton = card.querySelector(".paid-button");
+    paidButton.addEventListener("click", () => markGroupPaid(group.ids));
+    if (group.paymentStatus === "paid") {
+      paidButton.textContent = "Paid ✓";
+      paidButton.disabled = true;
     }
 
     fragment.appendChild(card);
   });
 
   ordersList.appendChild(fragment);
-  statusMessage.textContent = `${state.orders.length} order(s) loaded.`;
+  statusMessage.textContent = `${groups.length} order(s) loaded.`;
   renderDashboardMetrics();
-}
-
-async function loadMenu() {
-  try {
-    const response = await fetch("/api/menu");
-    if (!response.ok) {
-      throw new Error("Unable to load menu.");
-    }
-
-    const menu = await response.json();
-    state.menu = Array.isArray(menu) ? menu : [];
-    renderMenu();
-  } catch (error) {
-    console.error(error);
-    menuStatus.textContent = "Could not load menu.";
-    menuList.innerHTML = '<div class="order-card"><h4>Menu error</h4><p class="order-notes">Unable to reach the menu API.</p></div>';
-  }
 }
 
 async function loadOrders() {
@@ -212,27 +273,58 @@ async function deleteMenuItem(itemId) {
   }
 }
 
-async function markOrderReady(orderId) {
+async function markGroupReady(orderIds) {
   try {
-    const response = await fetch(`/api/orders?id=${encodeURIComponent(orderId)}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ status: "ready" })
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      throw new Error(errorBody.error || "Unable to update order.");
-    }
+    await Promise.all(
+      orderIds.map((id) =>
+        fetch(`/api/orders?id=${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "ready" })
+        }).then((response) => {
+          if (!response.ok) throw new Error("Unable to update order.");
+        })
+      )
+    );
 
     await loadOrders();
-    statusMessage.textContent = "\u2713 Order marked ready.";
+    statusMessage.textContent = "✓ Order marked ready.";
     statusMessage.className = "status-message status-success";
   } catch (error) {
     console.error(error);
     statusMessage.textContent = error.message || "Unable to update order.";
+    statusMessage.className = "status-message status-error";
+  }
+}
+async function markGroupPaid(orderIds) {
+  const isCash = confirm("Payment method?\n\nOK = Cash\nCancel = Card");
+  const paymentMethod = isCash ? "cash" : "card";
+
+  // const paidBy = prompt("Your name (staff confirming this payment):", "");
+  // if (!paidBy || !paidBy.trim()) {
+  //   alert("Staff name is required to confirm payment.");
+  //   return;
+  // }
+
+  try {
+    await Promise.all(
+      orderIds.map((id) =>
+        fetch(`/api/orders?id=${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentStatus: "paid", paymentMethod /*, paidBy: paidBy.trim()*/ })
+        }).then((response) => {
+          if (!response.ok) throw new Error("Unable to update payment.");
+        })
+      )
+    );
+
+    await loadOrders();
+    statusMessage.textContent = "✓ Payment marked as received.";
+    statusMessage.className = "status-message status-success";
+  } catch (error) {
+    console.error(error);
+    statusMessage.textContent = error.message || "Unable to update payment.";
     statusMessage.className = "status-message status-error";
   }
 }
