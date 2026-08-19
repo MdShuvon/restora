@@ -88,17 +88,20 @@ restora/
 ├── customer.html           # 🛒 Customer order form
 ├── restaurant.html         # 👨‍💼 Admin dashboard
 ├── index.js                # Home page logic
-├── customer.js             # Order form & PDF generation
-├── restaurant.js           # Admin panel logic
-├── styles.css              # Global styling
-├── server.js               # Node.js local server
-├── package.json            # Dependencies & scripts
+├── customer.js              # Order form & PDF generation
+├── restaurant.js            # Admin panel logic
+├── styles.css               # Global styling
+├── server.js                # Local dev server
 ├── api/
-│   ├── menu.js             # 📋 Menu API
-│   └── orders.js           # 📦 Orders API
-└── README.md               # Documentation
+│   ├── _db.js                # Shared Neon/Postgres connection
+│   ├── menu.js                # 📋 Menu API
+│   ├── orders.js              # 📦 Orders API
+│   └── reviews.js             # ⭐ Reviews API
+├── scripts/                   # Utility / setup scripts
+├── .env.example                # Environment variable template
+└── vercel.json                  # Vercel configuration
 ```
-
+ 
 ---
 
 ## 🔑 Admin Access
