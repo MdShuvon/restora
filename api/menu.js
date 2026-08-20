@@ -1,34 +1,36 @@
-const menu = [
-  { id: 1, name: "Grilled Chicken", price: 12.99 },
-  { id: 2, name: "Biryani", price: 9.99 },
-  { id: 3, name: "Tandoori Naan", price: 4.99 }
-];
+const { sql } = require("./_db");
 
 module.exports = async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "*");
-  
-  if (req.method === "GET") {
-    res.status(200).json(menu);
-  } else if (req.method === "POST") {
-    const { name, price } = req.body || {};
-    if (!name || price === undefined) {
-      res.status(400).json({ error: "Name and price required" });
-    } else {
-      const newItem = { id: Math.max(...menu.map(m => m.id), 0) + 1, name, price };
-      menu.push(newItem);
-      res.status(201).json(newItem);
+
+  try {
+    if (req.method === "GET") {
+      const menu = await sql`SELECT * FROM menu ORDER BY id ASC`;
+      return res.status(200).json(menu);
     }
-  } else if (req.method === "DELETE") {
-    const id = Number(req.query?.id);
-    const idx = menu.findIndex(m => m.id === id);
-    if (idx === -1) {
-      res.status(404).json({ error: "Not found" });
-    } else {
-      menu.splice(idx, 1);
-      res.status(200).json({ deleted: true });
+
+    if (req.method === "POST") {
+      const { name, price } = req.body || {};
+      if (!name || price === undefined) {
+        return res.status(400).json({ error: "Name and price required" });
+      }
+      const result = await sql`INSERT INTO menu (name, price) VALUES (${name}, ${price}) RETURNING *`;
+      return res.status(201).json(result[0]);
     }
-  } else {
-    res.status(405).json({ error: "Method not allowed" });
+
+    if (req.method === "DELETE") {
+      const id = Number(req.query?.id);
+      const result = await sql`DELETE FROM menu WHERE id = ${id} RETURNING *`;
+      if (result.length === 0) {
+        return res.status(404).json({ error: "Not found" });
+      }
+      return res.status(200).json({ deleted: true });
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
+  } catch (err) {
+    console.error("menu.js error:", err);
+    return res.status(500).json({ error: "Server error", details: err.message });
   }
 };
